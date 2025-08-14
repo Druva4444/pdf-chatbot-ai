@@ -7,7 +7,9 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import init_chat_model
 import os
-os.environ['MISTRAL_API_KEY']=''
+
+# Set API Key
+os.environ['MISTRAL_API_KEY'] = ''
 
 
 def getText(docs):
@@ -18,6 +20,7 @@ def getText(docs):
             text += page.extract_text() or ""
     return text
 
+
 def getChunks(text):
     splitter = CharacterTextSplitter(
         separator="\n",
@@ -27,13 +30,15 @@ def getChunks(text):
     )
     return splitter.split_text(text)
 
+
 def getDb(chunks):
     encoder = HuggingFaceBgeEmbeddings()
     db = Chroma.from_texts(chunks, encoder)
     return db
 
+
 def getChain(db):
-    memory = ConversationBufferWindowMemory(k=5, return_messages=True)
+    memory = ConversationBufferWindowMemory(memory_key="chat_history", k=5, return_messages=True)
     model = init_chat_model("mistral-large-latest", model_provider="mistralai")
     return ConversationalRetrievalChain.from_llm(
         llm=model,
@@ -78,23 +83,36 @@ def main():
 
         if query:
             with st.spinner("Thinking..."):
-                response = st.session_state.chain.run(query)
-            st.markdown(f"**🤖 Answer:** {response}")
+                response = st.session_state.chain.invoke({'question': query})
 
-            # Chat history display
+            # Extract only answer text
+            answer = response.get("answer", response)
+
+            # Store chat history
             if "chat_history" not in st.session_state:
                 st.session_state.chat_history = []
             st.session_state.chat_history.append(("You", query))
-            st.session_state.chat_history.append(("Bot", response))
+            st.session_state.chat_history.append(("Bot", answer))
 
-        # Display conversation history
+        # Display conversation history with styled bubbles
         if "chat_history" in st.session_state and st.session_state.chat_history:
-            st.subheader("🗨️ Conversation History")
+            st.subheader("💬 Conversation")
             for role, msg in st.session_state.chat_history:
                 if role == "You":
-                    st.markdown(f"**🧑 {role}:** {msg}")
+                    st.markdown(
+                        f"<div style=' padding:10px; "
+                        f"border-radius:10px; margin:5px 0; text-align:right;'>"
+                        f"<b>🧑 You:</b> {msg}</div>",
+                        unsafe_allow_html=True
+                    )
                 else:
-                    st.markdown(f"**🤖 {role}:** {msg}")
+                    st.markdown(
+                        f"<div style='; padding:10px; test-color:black "
+                        f"border-radius:10px; margin:5px 0; text-align:left;'>"
+                        f"<b>🤖 Bot:</b> {msg}</div>",
+                        unsafe_allow_html=True
+                    )
+
 
 if __name__ == '__main__':
     main()

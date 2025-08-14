@@ -4,3 +4,5 @@ langchain
 chromadb
 sentence-transformers
 huggingface-hub
+langchain
+langchain_community
