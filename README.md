@@ -19,7 +19,8 @@ Built with **Streamlit**, **LangChain**, **HuggingFace embeddings**, and **Chrom
 
 ## 📸 Demo Screenshot
 
-> *(Add a screenshot of your app here)*
+> ![Logo](ss.png)
+
 
 ---
 
